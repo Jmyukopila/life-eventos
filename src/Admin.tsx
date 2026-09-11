@@ -1,18 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
-import { ArrowLeft, ArrowUpRight, CalendarDays, CheckCircle2, ChevronRight, Download, ExternalLink, Eye, ImagePlus, LayoutDashboard, LogOut, MapPin, Pencil, Plus, RefreshCw, Search, Settings, ShieldCheck, Trash2, Users } from 'lucide-react';
-import type { Category, Event as ChurchEvent, EventInput, Registration, Session, SiteSettings } from '../shared/contracts';
+import { Archive, ArchiveRestore, ArrowLeft, ArrowUpRight, CalendarDays, CheckCircle2, ChevronRight, Download, ExternalLink, Eye, ImagePlus, LayoutDashboard, LogOut, MapPin, Network, Pencil, Plus, RefreshCw, Search, Settings, ShieldCheck, Trash2, Users } from 'lucide-react';
+import type { Category, Event as ChurchEvent, EventInput, OrgKind, OrgNode, Registration, Session, SiteSettings } from '../shared/contracts';
 import { api, errorMessage, json, RequestError, session } from './api';
 import { Brand, ErrorNotice, formatDate, formatTime, Loading, Modal } from './ui';
 import FormBuilder, { FormPreview } from './components/FormBuilder';
 import { MAX_FILE_QUESTIONS, MAX_QUESTIONS, normalizeQuestions } from './formTemplates';
 import './admin.css';
 
-type Page = 'overview' | 'events' | 'registrations' | 'settings';
+type Page = 'overview' | 'events' | 'registrations' | 'organization' | 'settings';
 const pages = [
   { id: 'overview' as const, label: 'Resumen', icon: LayoutDashboard },
   { id: 'events' as const, label: 'Eventos', icon: CalendarDays },
   { id: 'registrations' as const, label: 'Inscripciones', icon: Users },
+  { id: 'organization' as const, label: 'Organización', icon: Network },
   { id: 'settings' as const, label: 'Configuración', icon: Settings },
 ];
 const categories: Category[] = ['Iglesia', 'Grupos de conexión', 'Jóvenes', 'Familias', 'Servicio'];
@@ -138,13 +139,14 @@ export default function Admin() {
   return <div className="admin-app">
     {checking ? <div className="admin-initial"><Loading label="Comprobando sesión…"/></div> : sessionError ? <main className="admin-initial"><Brand/><ErrorNotice message={sessionError} retry={() => void checkSession()}/><a href="#/">Volver a la vista pública</a></main> : !currentSession?.authenticated ? <Login onLogin={setSession}/> : <div className="admin-shell">
       <aside className="admin-sidebar"><Brand light/><span className="admin-sidebar-label">Panel de administración</span><nav aria-label="Administración">{pages.map(item => <button key={item.id} type="button" className={`admin-nav-item ${page === item.id ? 'admin-nav-active' : ''}`} aria-current={page === item.id ? 'page' : undefined} onClick={() => { setPage(item.id); setSuccess(''); }}><item.icon size={20}/><span>{item.label}</span>{page === item.id && <ChevronRight size={16}/>}</button>)}</nav><div className="admin-sidebar-bottom"><a className="admin-public-link" href="#/"><ExternalLink size={18}/>Ver sitio público</a><div className="admin-user"><div className="admin-avatar">{currentSession.username.slice(0, 1).toUpperCase()}</div><div><strong>{currentSession.username}</strong><span>Sesión de administración</span></div></div><button type="button" className="admin-logout" disabled={loggingOut} onClick={() => void logout()}><LogOut size={18}/>{loggingOut ? 'Cerrando sesión…' : 'Cerrar sesión'}</button></div></aside>
-      <main className="admin-main"><header className="admin-topbar"><span>Life <span aria-hidden="true">/</span> Administración</span><a href="#/">Vista pública<ArrowUpRight size={16}/></a></header><div className="admin-content"><div className="admin-page-heading"><div><span className="admin-eyebrow">Comunidad en movimiento</span><h1>{pages.find(item => item.id === page)?.label}</h1><p>{page === 'overview' ? 'Una mirada a lo que estamos construyendo juntos.' : page === 'events' ? 'Prepara el próximo encuentro de tu comunidad.' : page === 'registrations' ? 'Cada inscripción es una persona a quien acompañar.' : 'Información institucional y cuidado de los datos.'}</p></div><div className="admin-actions"><button type="button" className="admin-icon" aria-label="Actualizar datos" disabled={loading} onClick={() => void loadData()}><RefreshCw size={19}/></button>{(page === 'events' || page === 'overview') && <button type="button" className="button primary" disabled={loading || !!error} onClick={() => setEditing('new')}><Plus size={18}/>Crear evento</button>}</div></div>
+      <main className="admin-main"><header className="admin-topbar"><span>Life <span aria-hidden="true">/</span> Administración</span><a href="#/">Vista pública<ArrowUpRight size={16}/></a></header><div className="admin-content"><div className="admin-page-heading"><div><span className="admin-eyebrow">Comunidad en movimiento</span><h1>{pages.find(item => item.id === page)?.label}</h1><p>{page === 'overview' ? 'Una mirada a lo que estamos construyendo juntos.' : page === 'events' ? 'Prepara el próximo encuentro de tu comunidad.' : page === 'registrations' ? 'Cada inscripción es una persona a quien acompañar.' : page === 'organization' ? 'Congregaciones, redes, subredes y grupos de conexión.' : 'Información institucional y cuidado de los datos.'}</p></div><div className="admin-actions"><button type="button" className="admin-icon" aria-label="Actualizar datos" disabled={loading} onClick={() => void loadData()}><RefreshCw size={19}/></button>{(page === 'events' || page === 'overview') && <button type="button" className="button primary" disabled={loading || !!error} onClick={() => setEditing('new')}><Plus size={18}/>Crear evento</button>}</div></div>
         {error && <ErrorNotice message={error} retry={() => void loadData()}/>}{success && <div className="admin-success" role="status"><CheckCircle2 size={19}/>{success}</div>}
         {loading ? <Loading label="Cargando información del panel…"/> : !error && <>
           {settings && !settings.ready && page !== 'settings' && <div className="admin-warning"><ShieldCheck size={22}/><div><strong>La recepción de inscripciones está bloqueada</strong><p>Completa y revisa la configuración institucional y de privacidad antes de habilitarla.</p></div><button className="button secondary" onClick={() => setPage('settings')}>Revisar configuración</button></div>}
           {page === 'overview' && <Overview events={events} registrations={registrations} onEdit={setEditing} onRegistrations={showRegistrations} onEvents={() => setPage('events')}/>}
           {page === 'events' && <EventsList events={events} onEdit={setEditing} onRegistrations={showRegistrations} onCreate={() => setEditing('new')}/>}
           {page === 'registrations' && <RegistrationsList registrations={registrations} events={events} eventFilter={eventFilter} setEventFilter={setEventFilter}/>}
+          {page === 'organization' && <OrganizationPage/>}
           {page === 'settings' && settings && <SettingsEditor settings={settings} onSaved={value => { setSettings(value); setSuccess('Configuración guardada.'); }}/>}
         </>}
       </div><footer className="admin-footer">Life · Una casa para las naciones<span>Administrar también es cuidar.</span></footer></main>
@@ -289,4 +291,132 @@ function SettingsEditor({ settings, onSaved }: { settings: SiteSettings; onSaved
     finally { setBusy(false); }
   }
   return <form className="admin-settings" onSubmit={save}>{error && <ErrorNotice message={error}/>} {success && <p className="admin-success" role="status">{success}</p>}<div className={settings.ready ? 'admin-note' : 'admin-warning'}><ShieldCheck size={24}/><div><strong>{settings.ready ? 'Recepción de inscripciones habilitada' : 'Recepción de inscripciones bloqueada'}</strong><p>El servidor solo permite recibir inscripciones cuando la configuración está completa y habilitada (ready). Guardar datos no equivale a una revisión jurídica.</p></div></div><fieldset className="admin-fieldset admin-borderless" disabled={busy}><section className="admin-panel"><div className="admin-section-heading"><div><span className="admin-eyebrow">01 · Responsable</span><h2>Información de la organización</h2><p>Datos reales del responsable del tratamiento de datos personales.</p></div></div><label className="field">Nombre o razón social del responsable *<input required maxLength={200} value={draft.organization} onChange={event => update('organization', event.target.value)}/></label><div className="admin-grid-two"><label className="field">Correo de contacto *<input type="email" required value={draft.contact_email} onChange={event => update('contact_email', event.target.value)}/></label><label className="field">Teléfono de contacto *<input type="tel" required value={draft.contact_phone} onChange={event => update('contact_phone', event.target.value)}/></label></div><label className="field">Dirección del responsable *<input required value={draft.address} onChange={event => update('address', event.target.value)}/></label></section><section className="admin-panel"><div className="admin-section-heading"><div><span className="admin-eyebrow">02 · Privacidad</span><h2>Cuidado de los datos personales</h2><p>Usa la política aprobada para tu organización; no un texto de ejemplo.</p></div></div><div className="admin-note"><div><strong>Requiere revisión legal real</strong><p>La política y las autorizaciones deben revisarse por el responsable y asesoría competente, incluyendo datos sensibles de carácter religioso, menores de edad, finalidades, derechos y canales de atención. Esta plataforma no certifica cumplimiento legal ni sustituye esa revisión.</p></div></div><label className="field">Texto de la política de privacidad *<textarea required rows={12} value={draft.privacy_policy} onChange={event => update('privacy_policy', event.target.value)} placeholder="Pega aquí la política real revisada y aprobada por tu organización."/></label><div className="admin-grid-two"><label className="field">Versión de la política *<input required maxLength={100} value={draft.privacy_version} onChange={event => update('privacy_version', event.target.value)}/><span className="admin-hint">Actualiza esta versión cuando cambie la política. Se conserva en cada inscripción.</span></label><label className="field">Plazo de conservación en días *<input type="number" required min={1} step={1} value={Number.isNaN(draft.retention_days) ? '' : draft.retention_days} onChange={event => update('retention_days', event.target.valueAsNumber)}/><span className="admin-hint">Define el plazo aprobado para las finalidades reales. Este panel no elimina datos ni acredita una eliminación automática.</span></label></div></section><section className="admin-panel"><span className="admin-eyebrow">03 · Recepción</span><h2>Habilitar las inscripciones</h2><label className="admin-check admin-enable"><input type="checkbox" checked={draft.registration_enabled} onChange={event => update('registration_enabled', event.target.checked)}/><span>Permitir nuevas inscripciones una vez completada y revisada la configuración</span></label><p className="admin-hint">Desactivar esta opción bloquea nuevas solicitudes sin borrar las ya recibidas. El estado definitivo lo calcula el servidor al guardar.</p></section><div className="admin-settings-footer"><span className="admin-hint">* Campos obligatorios</span><button className="button primary" type="submit">{busy ? 'Guardando…' : 'Guardar configuración'}</button></div></fieldset></form>;
+}
+
+const ORG_KIND_LABEL: Record<OrgKind, string> = { organization: 'Organización', congregation: 'Congregación', network: 'Red', subnetwork: 'Subred', group: 'Grupo de conexión' };
+const ORG_KIND_NOUN: Record<OrgKind, [string, string]> = { organization: ['organización', 'organizaciones'], congregation: ['congregación', 'congregaciones'], network: ['red', 'redes'], subnetwork: ['subred', 'subredes'], group: ['grupo de conexión', 'grupos de conexión'] };
+const ORG_ADD_LABEL: Record<OrgKind, string> = { organization: 'Añadir organización', congregation: 'Añadir congregación', network: 'Añadir red', subnetwork: 'Añadir subred', group: 'Añadir grupo' };
+// El tipo de un hijo lo determina el padre: el árbol tiene cinco niveles fijos y un grupo no tiene hijos.
+const ORG_CHILD_KIND: Partial<Record<OrgKind, OrgKind>> = { organization: 'congregation', congregation: 'network', network: 'subnetwork', subnetwork: 'group' };
+
+function pluralize(count: number, [singular, plural]: [string, string]): string {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
+function describeProtectedNode(fields: Record<string, string | number>, childKind: OrgKind | undefined): string {
+  const count = (key: string) => Number(fields[key] ?? 0) || 0;
+  const parts: string[] = [];
+  if (childKind && count('children')) parts.push(pluralize(count('children'), ORG_KIND_NOUN[childKind]));
+  if (count('memberships')) parts.push(pluralize(count('memberships'), ['responsable', 'responsables']));
+  if (count('events')) parts.push(pluralize(count('events'), ['evento', 'eventos']));
+  if (count('guest_events')) parts.push(pluralize(count('guest_events'), ['evento como invitado', 'eventos como invitado']));
+  const joined = parts.length > 1 ? `${parts.slice(0, -1).join(', ')} y ${parts[parts.length - 1]}` : parts[0] ?? 'datos asociados';
+  return `Tiene ${joined}. Archívalo en vez de borrarlo.`;
+}
+
+function NodeFormModal({ title, submitLabel, fieldLabel, initialName = '', onSubmit, onClose }: { title: string; submitLabel: string; fieldLabel: string; initialName?: string; onSubmit: (name: string) => Promise<void>; onClose: () => void }) {
+  const [name, setName] = useState(initialName);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [fieldError, setFieldError] = useState('');
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const trimmed = name.trim();
+    if (!trimmed) { setFieldError('Escribe un nombre.'); return; }
+    setBusy(true); setError(''); setFieldError('');
+    try { await onSubmit(trimmed); onClose(); }
+    catch (reason) {
+      if (reason instanceof RequestError && reason.fields.name) setFieldError(String(reason.fields.name));
+      else setError(detailedError(reason));
+    } finally { setBusy(false); }
+  }
+  return <Modal title={title} onClose={onClose}><form className="admin-org-form" onSubmit={submit}>{error && <ErrorNotice message={error}/>}<fieldset disabled={busy} className="admin-fieldset admin-borderless"><label className="field">{fieldLabel}<input required maxLength={120} autoFocus value={name} onChange={event => { setName(event.target.value); setFieldError(''); }} aria-invalid={fieldError ? true : undefined}/>{fieldError && <span className="admin-field-error" role="alert">{fieldError}</span>}</label><div className="admin-actions"><button type="button" className="button secondary" onClick={onClose} disabled={busy}>Cancelar</button><button type="submit" className="button primary" disabled={busy}>{busy ? 'Guardando…' : submitLabel}</button></div></fieldset></form></Modal>;
+}
+
+function DeleteNodeModal({ node, childKind, onClose, onDeleted }: { node: OrgNode; childKind: OrgKind | undefined; onClose: () => void; onDeleted: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [blocked, setBlocked] = useState('');
+  async function confirmDelete() {
+    setBusy(true); setError(''); setBlocked('');
+    try { await api(`/api/admin/nodes/${node.id}`, { method: 'DELETE' }); onDeleted(); }
+    catch (reason) {
+      if (reason instanceof RequestError && reason.code === 'protected') setBlocked(describeProtectedNode(reason.fields, childKind));
+      else setError(detailedError(reason));
+    } finally { setBusy(false); }
+  }
+  return <Modal title={`Eliminar ${node.name}`} onClose={onClose}><div className="admin-confirm">{error && <ErrorNotice message={error}/>}{blocked ? <ErrorNotice message={blocked}/> : <p>¿Eliminar «{node.name}»? Esta acción no se puede deshacer.</p>}<div className="admin-actions"><button type="button" className="button secondary" onClick={onClose}>{blocked ? 'Entendido' : 'Cancelar'}</button>{!blocked && <button type="button" className="button primary" disabled={busy} onClick={() => void confirmDelete()}>{busy ? 'Eliminando…' : 'Eliminar definitivamente'}</button>}</div></div></Modal>;
+}
+
+type OrgFormModalState = { mode: 'create'; parent: OrgNode; kind: OrgKind } | { mode: 'rename'; node: OrgNode };
+
+function OrgNodeRow({ node, childrenOf, onAdd, onRename, onToggleActive, onDelete, busyId }: { node: OrgNode; childrenOf: Map<string, OrgNode[]>; onAdd: (parent: OrgNode, kind: OrgKind) => void; onRename: (node: OrgNode) => void; onToggleActive: (node: OrgNode) => void; onDelete: (node: OrgNode) => void; busyId: string | null }) {
+  const kids = childrenOf.get(node.id) ?? [];
+  const childKind = ORG_CHILD_KIND[node.kind];
+  const isRoot = node.kind === 'organization';
+  return <li className={`admin-org-node ${!node.active ? 'admin-org-archived' : ''}`}>
+    <div className="admin-org-row">
+      <div className="admin-org-label"><span className="admin-org-name">{node.name}</span><span className="admin-org-kind">{ORG_KIND_LABEL[node.kind]}</span>{!node.active && <span className="admin-badge admin-status-closed">Archivado</span>}</div>
+      <div className="admin-org-actions">
+        {childKind && <button type="button" className="admin-text-button" onClick={() => onAdd(node, childKind)}>{ORG_ADD_LABEL[childKind]}</button>}
+        <button type="button" className="admin-icon" aria-label={`Renombrar ${node.name}`} onClick={() => onRename(node)}><Pencil size={16}/></button>
+        {!isRoot && <button type="button" className="admin-icon" aria-label={`${node.active ? 'Archivar' : 'Restaurar'} ${node.name}`} disabled={busyId === node.id} onClick={() => onToggleActive(node)}>{node.active ? <Archive size={16}/> : <ArchiveRestore size={16}/>}</button>}
+        {!isRoot && <button type="button" className="admin-icon admin-danger" aria-label={`Eliminar ${node.name}`} onClick={() => onDelete(node)}><Trash2 size={16}/></button>}
+      </div>
+    </div>
+    {kids.length > 0 && <ul className="admin-org-children">{kids.map(child => <OrgNodeRow key={child.id} node={child} childrenOf={childrenOf} onAdd={onAdd} onRename={onRename} onToggleActive={onToggleActive} onDelete={onDelete} busyId={busyId}/>)}</ul>}
+  </li>;
+}
+
+function OrganizationPage() {
+  const [nodes, setNodes] = useState<OrgNode[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [formModal, setFormModal] = useState<OrgFormModalState | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<OrgNode | null>(null);
+
+  async function load(initial = false) {
+    if (initial) setLoading(true);
+    setError('');
+    try { setNodes((await api<{ nodes: OrgNode[] }>('/api/admin/nodes')).nodes); }
+    catch (reason) { setError(detailedError(reason)); }
+    finally { if (initial) setLoading(false); }
+  }
+  useEffect(() => { void load(true); }, []);
+
+  const childrenOf = new Map<string, OrgNode[]>();
+  nodes.forEach(node => { if (node.parent) childrenOf.set(node.parent, [...(childrenOf.get(node.parent) ?? []), node]); });
+  // La API ordena por path (uuid): entre hermanos, el orden alfabético es el que espera una persona.
+  childrenOf.forEach(kids => kids.sort((a, b) => a.name.localeCompare(b.name, 'es')));
+  const root = nodes.find(node => node.parent === null);
+
+  async function toggleActive(node: OrgNode) {
+    setBusyId(node.id); setError('');
+    try {
+      await api<OrgNode>(`/api/admin/nodes/${node.id}`, json('PUT', { active: !node.active }));
+      await load();
+      setSuccess(node.active ? `Se archivó “${node.name}”.` : `Se restauró “${node.name}”.`);
+    } catch (reason) { setError(detailedError(reason)); }
+    finally { setBusyId(null); }
+  }
+
+  return <section className="admin-organization">
+    {loading ? <Loading label="Cargando la estructura organizativa…"/> : error ? <ErrorNotice message={error} retry={() => void load(true)}/> : !root ? <div className="admin-empty admin-panel"><Network size={34}/><h2>No encontramos la organización</h2><p>No hay un nodo raíz configurado todavía.</p></div> : <>
+      {success && <div className="admin-success" role="status"><CheckCircle2 size={19}/>{success}</div>}
+      <ul className="admin-org-tree"><OrgNodeRow node={root} childrenOf={childrenOf} onAdd={(parent, kind) => setFormModal({ mode: 'create', parent, kind })} onRename={node => setFormModal({ mode: 'rename', node })} onToggleActive={node => void toggleActive(node)} onDelete={node => setDeleteTarget(node)} busyId={busyId}/></ul>
+    </>}
+    {formModal?.mode === 'create' && <NodeFormModal title={ORG_ADD_LABEL[formModal.kind]} submitLabel="Crear" fieldLabel="Nombre *" onClose={() => setFormModal(null)} onSubmit={async name => {
+      const created = await api<OrgNode>('/api/admin/nodes', json('POST', { kind: formModal.kind, name, parent: formModal.parent.id }));
+      await load();
+      setSuccess(`Se creó “${created.name}”.`);
+    }}/>}
+    {formModal?.mode === 'rename' && <NodeFormModal title={`Renombrar ${formModal.node.name}`} submitLabel="Guardar" fieldLabel="Nombre *" initialName={formModal.node.name} onClose={() => setFormModal(null)} onSubmit={async name => {
+      await api<OrgNode>(`/api/admin/nodes/${formModal.node.id}`, json('PUT', { name }));
+      await load();
+      setSuccess(`Se renombró a “${name}”.`);
+    }}/>}
+    {deleteTarget && <DeleteNodeModal node={deleteTarget} childKind={ORG_CHILD_KIND[deleteTarget.kind]} onClose={() => setDeleteTarget(null)} onDeleted={() => { const name = deleteTarget.name; setDeleteTarget(null); void load().then(() => setSuccess(`Se eliminó “${name}”.`)); }}/>}
+  </section>;
 }

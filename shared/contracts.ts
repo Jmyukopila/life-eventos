@@ -80,7 +80,8 @@ export interface RegistrationInput {
 export type OrgKind = 'organization' | 'congregation' | 'network' | 'subnetwork' | 'group';
 export interface OrgNode { id: string; kind: OrgKind; name: string; parent: string | null; active: boolean }
 export interface OrgNodeInput { kind: OrgKind; name: string; parent: string }
-export interface ApiError { error: { code: string; message: string; fields?: Record<string, string> } }
+// fields lleva mensajes por campo (string) o, en el 409 `protected` de nodos, conteos (number).
+export interface ApiError { error: { code: string; message: string; fields?: Record<string, string | number> } }
 export interface ApiContract {
   'GET /api/session': { response: Session };
   'POST /api/login': { request: { username: string; password: string }; response: Session };

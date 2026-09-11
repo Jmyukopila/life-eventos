@@ -238,6 +238,17 @@
 .admin-app .admin-login-form > p { font-size: 13px; color: var(--admin-muted); margin-bottom: 28px; }
 .admin-app .admin-login-form > .admin-hint { margin-top: 24px; font-size: 11px; }
 .admin-app .admin-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+.admin-app .admin-org-tree, .admin-app .admin-org-children { list-style: none; margin: 0; padding: 0; }
+.admin-app .admin-org-children { padding-left: 26px; margin-top: 12px; border-left: 1px solid var(--admin-border); }
+.admin-app .admin-org-node + .admin-org-node { margin-top: 12px; }
+.admin-app .admin-org-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; background: #fff; border: 1px solid var(--admin-border); border-radius: 8px; padding: 13px 16px; }
+.admin-app .admin-org-archived > .admin-org-row { opacity: .65; }
+.admin-app .admin-org-label { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0; }
+.admin-app .admin-org-name { font-weight: 650; overflow-wrap: anywhere; }
+.admin-app .admin-org-kind { flex: none; font-size: 10px; text-transform: uppercase; letter-spacing: .07em; font-weight: 650; color: var(--admin-navy); border: 1px solid var(--admin-border); border-radius: 4px; padding: 3px 8px; white-space: nowrap; }
+.admin-app .admin-org-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.admin-app .admin-field-error { display: block; color: #a13932; font-size: 12px; margin-top: 6px; }
 @media (min-width: 1600px) {
   .admin-app .admin-content { padding-top: 55px; }
 }
@@ -301,6 +312,9 @@
   .admin-app .admin-warning, .admin-app .admin-note { padding: 16px; gap: 10px; }
   .admin-app .admin-warning .button { margin-left: 0; width: 100%; }
   .admin-app .admin-footer { padding: 17px 16px; font-size: 9px; flex-direction: column; gap: 5px; }
+  .admin-app .admin-org-children { padding-left: 14px; }
+  .admin-app .admin-org-row { flex-direction: column; align-items: stretch; }
+  .admin-app .admin-org-actions { justify-content: flex-start; }
   .admin-app .modal, .admin-app .modal-wide { width: calc(100vw - 16px); max-height: calc(100dvh - 20px); border-radius: 9px; }
   .admin-app .modal-head { padding: 19px 17px; }
   .admin-app .modal-head h2 { font-size: 25px; }

@@ -3,7 +3,7 @@ import type { ApiError, Session } from '../shared/contracts';
 let csrfToken = '';
 export class RequestError extends Error {
   code: string;
-  fields: Record<string, string>;
+  fields: Record<string, string | number>;
   status: number;
   constructor(body: ApiError, status: number) {
     super(body.error.message);
