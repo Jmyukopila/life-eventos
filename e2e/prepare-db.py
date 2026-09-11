@@ -14,7 +14,7 @@ import django  # noqa: E402
 django.setup()
 
 from django.contrib.auth import get_user_model  # noqa: E402
-from events.models import SiteSettings  # noqa: E402
+from events.models import Membership, OrgNode, SiteSettings  # noqa: E402
 
 STAFF_USERNAME = os.environ['E2E_STAFF_USERNAME']
 STAFF_PASSWORD = os.environ['E2E_STAFF_PASSWORD']
@@ -27,6 +27,8 @@ def ensure_staff_user():
     user.is_active = True
     user.set_password(STAFF_PASSWORD)
     user.save()
+    root, _ = OrgNode.objects.get_or_create(kind='organization', defaults={'name': os.environ['E2E_ORG']})
+    Membership.objects.get_or_create(user=user, node=root, defaults={'role': 'apostol'})
     print(f"Usuario de personal {'creado' if created else 'actualizado'}: {STAFF_USERNAME}")
 
 

@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand, CommandError
+from events.models import Membership, OrgNode, SiteSettings
 
 
 class Command(BaseCommand):
@@ -24,4 +25,7 @@ class Command(BaseCommand):
         user.is_staff = True
         user.is_active = True
         user.save()
+        site = SiteSettings.objects.get_or_create(pk=1)[0]
+        root, _ = OrgNode.objects.get_or_create(kind='organization', defaults={'name': site.organization})
+        Membership.objects.get_or_create(user=user, node=root, defaults={'role': 'apostol'})
         self.stdout.write(self.style.SUCCESS(f'Usuario de panel "{username}" listo.'))

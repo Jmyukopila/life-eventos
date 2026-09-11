@@ -17,7 +17,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from . import storage
 from . import retention
-from .models import Attachment, Event, Registration, SiteSettings
+from .models import Attachment, Event, OrgNode, Registration, SiteSettings
 from .security import ApiProblem, body_json, endpoint, failure
 from .validation import boolean, email, event_input, inspect_file, integer, text, validate_answers
 
@@ -154,7 +154,7 @@ def public_event(request, event_id):
 def admin_events(request):
     if request.method == 'GET':
         return JsonResponse({'events': [event_data(event) for event in Event.objects.all()]})
-    event = Event.objects.create(**event_input(body_json(request)))
+    event = Event.objects.create(**event_input(body_json(request)), owner=OrgNode.objects.get(kind='organization'))
     return JsonResponse(event_data(event), status=201)
 
 

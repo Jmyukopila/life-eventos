@@ -1,6 +1,6 @@
 from datetime import datetime
 from django.core.management.base import BaseCommand
-from events.models import Event, SiteSettings
+from events.models import Event, OrgNode, SiteSettings
 
 
 def question(qid, label, kind='text', required=False, options=None, rules=None, help=''):
@@ -11,7 +11,8 @@ class Command(BaseCommand):
     help = 'Crea eventos de ejemplo sin usuarios, registros ni habilitación de datos personales.'
 
     def handle(self, *args, **options):
-        SiteSettings.objects.get_or_create(pk=1)
+        site = SiteSettings.objects.get_or_create(pk=1)[0]
+        root, _ = OrgNode.objects.get_or_create(kind='organization', defaults={'name': site.organization})
         common = [question('first_time', '¿Es la primera vez que nos acompañas?', 'radio', True, ['Sí', 'No']), question('notes', '¿Hay algo que debamos saber para recibirte mejor?', 'textarea', help='Opcional. Evita incluir información de salud u otros datos sensibles.')]
         rows = [
             ('Un encuentro que nos acerca', 'Iglesia', '2026-09-26T16:00:00-05:00', 'encuentro', 'Un espacio para encontrarnos, adorar juntos y compartir la Palabra.', 'Hay un lugar para ti. Queremos reunirnos como casa para compartir una tarde de adoración, enseñanza y conversación.\n\nPuedes venir por primera vez, con tus amigos o con toda tu familia. No necesitas pertenecer a un grupo para acompañarnos.\n\nAbrimos las puertas 30 minutos antes. Trae tu Biblia si deseas y ven con tiempo para conocer a otras personas. La entrada es libre; el registro nos ayuda a preparar tu bienvenida.', 250, common),
@@ -22,5 +23,5 @@ class Command(BaseCommand):
             ('Una noche. Una voz.', 'Iglesia', '2026-10-23T19:00:00-05:00', 'adoracion', 'Nos reunimos para dar gracias y adorar con una misma voz.', 'Una noche de adoración en nuestra casa. Dejemos un espacio en la semana para dar gracias, orar y compartir como comunidad.\n\nLa entrada es libre y los cupos son limitados. Puedes venir acompañado; cada persona debe tener su registro.', 220, common),
         ]
         for title, category, date, poster, summary, description, capacity, questions in rows:
-            Event.objects.get_or_create(title=title, defaults={'category': category, 'date': datetime.fromisoformat(date), 'cover': f'/posters/{poster}.svg', 'gallery': ['/posters/adoracion.svg', '/posters/conexion.svg'] if poster == 'encuentro' else [], 'summary': summary, 'description': description, 'location': 'Casa Life · Sede principal (ubicación de ejemplo)', 'capacity': capacity, 'status': 'published', 'featured': poster == 'encuentro', 'questions': questions})
+            Event.objects.get_or_create(title=title, defaults={'category': category, 'date': datetime.fromisoformat(date), 'cover': f'/posters/{poster}.svg', 'gallery': ['/posters/adoracion.svg', '/posters/conexion.svg'] if poster == 'encuentro' else [], 'summary': summary, 'description': description, 'location': 'Casa Life · Sede principal (ubicación de ejemplo)', 'capacity': capacity, 'status': 'published', 'featured': poster == 'encuentro', 'questions': questions, 'owner': root})
         self.stdout.write(self.style.SUCCESS('6 eventos de ejemplo disponibles. Inscripciones deshabilitadas hasta configurar privacidad.'))

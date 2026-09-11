@@ -1,5 +1,8 @@
 import uuid
+from django.conf import settings
 from django.db import models
+from django.db.models import Q
+from django.db.models.functions import Lower
 
 
 class SiteSettings(models.Model):
@@ -15,6 +18,44 @@ class SiteSettings(models.Model):
     @property
     def ready(self):
         return bool(self.registration_enabled and self.organization and self.contact_email and self.address and len(self.privacy_policy.strip()) >= 200 and self.privacy_version)
+
+
+class OrgNode(models.Model):
+    KINDS = ['organization', 'congregation', 'network', 'subnetwork', 'group']
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    parent = models.ForeignKey('self', null=True, blank=True, related_name='children', on_delete=models.PROTECT)
+    kind = models.CharField(max_length=20)
+    name = models.CharField(max_length=120)
+    # Camino "/uuid/uuid/": resuelve «todo lo que cuelga de X» con un prefijo indexado.
+    # 255 y no 200: cinco niveles ya ocupan 186 caracteres.
+    path = models.CharField(max_length=255, unique=True, editable=False)
+    active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['path']
+        constraints = [
+            models.UniqueConstraint(fields=['kind'], condition=Q(kind='organization'), name='una_sola_organizacion'),
+            models.UniqueConstraint(Lower('name'), 'parent', name='nombre_unico_entre_hermanos'),
+        ]
+        indexes = [models.Index(fields=['path'])]
+
+    def save(self, *args, **kwargs):
+        self.path = (self.parent.path if self.parent else '/') + str(self.id) + '/'
+        super().save(*args, **kwargs)
+
+    def descendants(self):
+        # Incluye al propio nodo: el prefijo de su path siempre lo cubre a sí mismo.
+        return OrgNode.objects.filter(path__startswith=self.path)
+
+
+class Membership(models.Model):
+    ROLES = ['apostol', 'pastor', 'lider_red', 'lider', 'estaca']
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='memberships', on_delete=models.CASCADE)
+    node = models.ForeignKey(OrgNode, related_name='memberships', on_delete=models.PROTECT)
+    role = models.CharField(max_length=20)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['user', 'node'], name='una_membresia_por_nodo')]
 
 
 class Event(models.Model):
@@ -35,6 +76,8 @@ class Event(models.Model):
     questions = models.JSONField(default=list)
     form_version = models.PositiveIntegerField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
+    owner = models.ForeignKey(OrgNode, related_name='events', on_delete=models.PROTECT, null=False)
+    guests = models.ManyToManyField(OrgNode, through='EventGuest', related_name='guest_events', blank=True)
 
     class Meta:
         ordering = ['date']
@@ -73,3 +116,11 @@ class Attachment(models.Model):
     name = models.CharField(max_length=255)
     storage_name = models.CharField(max_length=80)
     content_type = models.CharField(max_length=80)
+
+
+class EventGuest(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    node = models.ForeignKey(OrgNode, on_delete=models.CASCADE)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['event', 'node'], name='invitado_unico_por_evento')]

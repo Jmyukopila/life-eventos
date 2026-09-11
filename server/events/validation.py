@@ -13,6 +13,27 @@ CATEGORIES = ['Iglesia', 'Grupos de conexión', 'Jóvenes', 'Familias', 'Servici
 TYPES = ['text', 'email', 'tel', 'textarea', 'select', 'radio', 'date', 'file']
 POSTERS = {'encuentro', 'conexion', 'jovenes', 'familias', 'servicio', 'adoracion'}
 
+PADRE_VALIDO = {'organization': None, 'congregation': 'organization', 'network': 'congregation',
+                'subnetwork': 'network', 'group': 'subnetwork'}
+ROL_EN_NODO = {'apostol': ['organization'], 'pastor': ['congregation'], 'lider_red': ['network'],
+               'lider': ['subnetwork', 'group'], 'estaca': ['group']}
+
+
+def validar_nodo(kind, parent):
+    if kind not in PADRE_VALIDO:
+        raise ApiProblem('Tipo de nodo no válido.', fields={'kind': 'Tipo de nodo no válido.'})
+    padre_requerido = PADRE_VALIDO[kind]
+    padre_kind = parent.kind if parent else None
+    if padre_kind != padre_requerido:
+        raise ApiProblem('El nodo padre no corresponde a este tipo.', fields={'parent': 'Nodo padre no válido.'})
+
+
+def validar_membresia(role, node):
+    if role not in ROL_EN_NODO:
+        raise ApiProblem('Rol no válido.', fields={'role': 'Rol no válido.'})
+    if node.kind not in ROL_EN_NODO[role]:
+        raise ApiProblem('Este rol no aplica a ese tipo de nodo.', fields={'role': 'Rol no válido para el nodo.'})
+
 
 def text(data, key, maximum, required=True):
     value = data.get(key, '')

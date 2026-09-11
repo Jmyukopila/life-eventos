@@ -16,7 +16,7 @@ from django.core.management import call_command
 from django.test import Client, TestCase, override_settings
 from django.utils import timezone
 
-from events.models import Attachment, Event, Registration, SiteSettings
+from events.models import Attachment, Event, Membership, OrgNode, Registration, SiteSettings
 
 
 class EventApiTests(TestCase):
@@ -27,6 +27,8 @@ class EventApiTests(TestCase):
         cls.staff = get_user_model().objects.create_user(
             username='test-staff', password=cls.password, is_staff=True,
         )
+        cls.root, _ = OrgNode.objects.get_or_create(kind='organization', defaults={'name': 'Organización de prueba'})
+        Membership.objects.create(user=cls.staff, node=cls.root, role='apostol')
 
     def setUp(self):
         root = Path(self.enterContext(tempfile.TemporaryDirectory(prefix='events-api-test-')))
@@ -51,7 +53,7 @@ class EventApiTests(TestCase):
             self.question('document', 'file', accept='documents'),
             self.question('availability'),
         ]
-        self.event = Event.objects.create(**self.event_input())
+        self.event = Event.objects.create(**self.event_input(), owner=self.root)
         self.url = f'/api/events/{self.event.pk}/registrations'
 
     def authenticate_staff(self, client):
@@ -127,7 +129,7 @@ class EventApiTests(TestCase):
         return output.getvalue()
 
     def test_public_list_and_detail_hide_drafts(self):
-        draft = Event.objects.create(**self.event_input(status='draft'))
+        draft = Event.objects.create(**self.event_input(status='draft'), owner=self.root)
         response = self.client.get('/api/events')
         self.assertEqual(response.status_code, 200)
         self.assertEqual([row['id'] for row in response.json()['events']], [str(self.event.pk)])

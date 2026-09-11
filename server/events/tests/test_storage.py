@@ -143,7 +143,7 @@ class MontajeSupabase:
         from django.contrib.auth import get_user_model
         from django.test import Client
         from django.utils import timezone
-        from events.models import Event, SiteSettings
+        from events.models import Event, Membership, OrgNode, SiteSettings
         self.json, self.uuid = json, uuid
         self.site = SiteSettings.objects.create(
             pk=1, organization='Organización sintética de pruebas',
@@ -151,6 +151,7 @@ class MontajeSupabase:
             privacy_policy='Política sintética exclusiva de pruebas sobre finalidad y retención. ' * 6,
             privacy_version='test-v1', retention_days=30, registration_enabled=True,
         )
+        self.root, _ = OrgNode.objects.get_or_create(kind='organization', defaults={'name': 'Organización de prueba'})
         pregunta = lambda qid, kind='text', **extra: {
             'id': qid, 'label': f'Pregunta {qid}', 'type': kind, 'required': True,
             'help': '', 'options': [], 'rules': [], 'accept': 'both', **extra}
@@ -158,9 +159,11 @@ class MontajeSupabase:
             title='Evento sintético', category='Iglesia', summary='Resumen', description='Descripción',
             date=timezone.now() + timedelta(days=10), location='Lugar ficticio', capacity=10,
             cover='/posters/encuentro.svg', gallery=[], status='published', featured=False,
-            questions=[pregunta('acta', 'file', accept='documents'), pregunta('anexo', 'file', accept='documents')])
+            questions=[pregunta('acta', 'file', accept='documents'), pregunta('anexo', 'file', accept='documents')],
+            owner=self.root)
         self.staff = get_user_model().objects.create_user(
             username='staff-supabase', password=self.password, is_staff=True)
+        Membership.objects.create(user=self.staff, node=self.root, role='apostol')
         self.admin = Client()
         self.admin.force_login(self.staff, backend='django.contrib.auth.backends.ModelBackend')
         sesion = self.admin.session
