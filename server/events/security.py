@@ -17,7 +17,7 @@ def failure(message, code='invalid', status=400, fields=None):
     return JsonResponse({'error': body}, status=status)
 
 
-def endpoint(methods, staff=False):
+def endpoint(methods, staff=False, permission=None):
     def decorate(view):
         @wraps(view)
         def wrapped(request, *args, **kwargs):
@@ -29,6 +29,10 @@ def endpoint(methods, staff=False):
                 if time.time() - request.session.get('authenticated_at', 0) > 43200:
                     request.session.flush()
                     return failure('La sesión venció. Inicia sesión nuevamente.', 'session_expired', 401)
+                from .scope import Scope  # import tardío: evita un ciclo con views/scope
+                request.scope = Scope(request.user)
+                if permission and not request.scope.can(permission):
+                    return failure('No tienes permiso para esta acción.', 'forbidden', 403)
             try:
                 response = view(request, *args, **kwargs)
                 response['Cache-Control'] = 'no-store'

@@ -17,7 +17,8 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from . import storage
 from . import retention
-from .models import Attachment, Event, OrgNode, Registration, SiteSettings
+from .models import Attachment, Event, Registration, SiteSettings
+from .scope import RANGO_ROL
 from .security import ApiProblem, body_json, endpoint, failure
 from .validation import boolean, email, event_input, inspect_file, integer, text, validate_answers
 
@@ -34,12 +35,17 @@ def event_data(event):
     return {**{key: getattr(event, key) for key in ['title', 'category', 'summary', 'description', 'location', 'capacity', 'registered', 'cover', 'gallery', 'status', 'featured', 'questions', 'form_version']}, 'id': str(event.id), 'date': event.date.isoformat(), 'end_date': event.end_date.isoformat() if event.end_date else None, 'created_at': event.created_at.isoformat()}
 
 
-def get_event(event_id, public=False):
-    query = Event.objects.all()
+def get_event(event_id, public=False, scope=None, write=False):
+    if scope is not None:
+        query = scope.owned_events() if write else scope.events()
+    else:
+        query = Event.objects.all()
     if public:
         query = query.exclude(status='draft')
     event = query.filter(pk=event_id).first()
     if not event:
+        # Mismo mensaje tanto si el evento no existe como si existe fuera del ámbito:
+        # no se confirma ni la existencia del recurso.
         raise ApiProblem('No encontramos este evento.', 'not_found', 404)
     return event
 
@@ -116,7 +122,7 @@ def public_settings(request):
     return JsonResponse(settings_data(site_settings()))
 
 
-@endpoint(['PUT'], staff=True)
+@endpoint(['PUT'], staff=True, permission='settings.edit')
 def admin_settings(request):
     data = body_json(request)
     site = site_settings()
@@ -150,19 +156,27 @@ def public_event(request, event_id):
     return JsonResponse(event_data(get_event(event_id, True)))
 
 
-@endpoint(['GET', 'POST'], staff=True)
+@endpoint(['GET', 'POST'], staff=True, permission='event.view')
 def admin_events(request):
     if request.method == 'GET':
-        return JsonResponse({'events': [event_data(event) for event in Event.objects.all()]})
-    event = Event.objects.create(**event_input(body_json(request)), owner=OrgNode.objects.get(kind='organization'))
+        return JsonResponse({'events': [event_data(event) for event in request.scope.events()]})
+    if not request.scope.can('event.create'):
+        raise ApiProblem('No tienes permiso para crear eventos.', 'forbidden', 403)
+    # El dueño es el nodo de la membresía de rango más alto: owner/guests en el cuerpo se
+    # ignoran en esta fase (event_input no los extrae) porque fijarlos es fase 4 (event.assign).
+    owner = min(request.scope.memberships, key=lambda m: RANGO_ROL.index(m.role)).node
+    event = Event.objects.create(**event_input(body_json(request)), owner=owner)
     return JsonResponse(event_data(event), status=201)
 
 
-@endpoint(['PUT'], staff=True)
+@endpoint(['PUT'], staff=True, permission='event.edit')
 def admin_event(request, event_id):
     values = event_input(body_json(request))
     with transaction.atomic():
-        event = get_event(event_id)
+        event = get_event(event_id, scope=request.scope, write=True)
+        publicando = (values['status'] == 'published' and event.status != 'published') or (values['featured'] and not event.featured)
+        if publicando and not request.scope.can('event.publish'):
+            raise ApiProblem('No puedes publicar eventos.', 'forbidden', 403)
         if values['capacity'] < event.registered:
             raise ApiProblem('El cupo no puede ser menor al número de inscritos.', 'capacity_conflict', 409)
         if values['questions'] != event.questions:
@@ -173,7 +187,7 @@ def admin_event(request, event_id):
     return JsonResponse(event_data(event))
 
 
-@endpoint(['POST'], staff=True)
+@endpoint(['POST'], staff=True, permission='event.edit')
 def admin_images(request):
     if set(request.FILES) != {'file'} or len(request.FILES.getlist('file')) != 1:
         raise ApiProblem('Selecciona una imagen.')
@@ -274,20 +288,22 @@ def registration_data(record):
 
 
 def registrations_query(request):
-    query = Registration.objects.select_related('event').prefetch_related('attachments')
+    query = Registration.objects.filter(event__in=request.scope.events()).select_related('event').prefetch_related('attachments')
     if request.GET.get('event_id'):
-        query = query.filter(event_id=uuid.UUID(request.GET['event_id']))
+        # Resuelto con el mismo scope: un evento ajeno da 404 aquí, no una lista vacía.
+        event = get_event(request.GET['event_id'], scope=request.scope)
+        query = query.filter(event_id=event.id)
     return query
 
 
-@endpoint(['GET'], staff=True)
+@endpoint(['GET'], staff=True, permission='registration.view')
 def admin_registrations(request):
     return JsonResponse({'registrations': [registration_data(record) for record in registrations_query(request)]})
 
 
-@endpoint(['GET'], staff=True)
+@endpoint(['GET'], staff=True, permission='registration.view')
 def private_file(request, file_id):
-    file = Attachment.objects.filter(pk=file_id).first()
+    file = Attachment.objects.filter(pk=file_id, registration__event__in=request.scope.events()).first()
     if not file:
         raise ApiProblem('Archivo no encontrado.', 'not_found', 404)
     url = storage.signed_url(file.storage_name)
@@ -302,7 +318,7 @@ def private_file(request, file_id):
     return response
 
 
-@endpoint(['GET'], staff=True)
+@endpoint(['GET'], staff=True, permission='registration.export')
 def export_registrations(request):
     response = HttpResponse(content_type='text/csv; charset=utf-8')
     response['Content-Disposition'] = 'attachment; filename="inscripciones-life.csv"'
