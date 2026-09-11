@@ -16,6 +16,8 @@ urlpatterns = [
     path('api/admin/events', views.admin_events),
     path('api/admin/events/<uuid:event_id>', views.admin_event),
     path('api/admin/images', views.admin_images),
+    path('api/admin/nodes', views.admin_nodes),
+    path('api/admin/nodes/<uuid:node_id>', views.admin_node),
     path('api/admin/registrations', views.admin_registrations),
     path('api/admin/registrations/export', views.export_registrations),
     path('api/admin/files/<uuid:file_id>', views.private_file),

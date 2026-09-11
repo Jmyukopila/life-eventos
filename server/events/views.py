@@ -9,7 +9,7 @@ from pathlib import Path
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.core.cache import cache
-from django.db import connection, transaction
+from django.db import connection, transaction, IntegrityError
 from django.db.models import F
 from django.http import FileResponse, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.middleware.csrf import get_token, rotate_token
@@ -17,10 +17,10 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from . import storage
 from . import retention
-from .models import Attachment, Event, Registration, SiteSettings
+from .models import Attachment, Event, OrgNode, Registration, SiteSettings
 from .scope import RANGO_ROL
 from .security import ApiProblem, body_json, endpoint, failure
-from .validation import boolean, email, event_input, inspect_file, integer, text, validate_answers
+from .validation import boolean, email, event_input, inspect_file, integer, text, validar_nodo, validate_answers
 
 
 def site_settings():
@@ -33,6 +33,18 @@ def settings_data(site):
 
 def event_data(event):
     return {**{key: getattr(event, key) for key in ['title', 'category', 'summary', 'description', 'location', 'capacity', 'registered', 'cover', 'gallery', 'status', 'featured', 'questions', 'form_version']}, 'id': str(event.id), 'date': event.date.isoformat(), 'end_date': event.end_date.isoformat() if event.end_date else None, 'created_at': event.created_at.isoformat()}
+
+
+def node_data(node):
+    return {'id': str(node.id), 'kind': node.kind, 'name': node.name, 'parent': str(node.parent_id) if node.parent_id else None, 'active': node.active}
+
+
+def get_node(node_id, scope):
+    node = scope.nodes().filter(pk=node_id).first()
+    if not node:
+        # Mismo mensaje tanto si el nodo no existe como si existe fuera del ámbito.
+        raise ApiProblem('No encontramos este nodo.', 'not_found', 404)
+    return node
 
 
 def get_event(event_id, public=False, scope=None, write=False):
@@ -210,6 +222,64 @@ def public_image(request, filename):
     response = FileResponse(path.open('rb'), content_type='image/jpeg')
     response['X-Content-Type-Options'] = 'nosniff'
     return response
+
+
+@endpoint(['GET', 'POST'], staff=True, permission='node.manage')
+def admin_nodes(request):
+    if request.method == 'GET':
+        return JsonResponse({'nodes': [node_data(node) for node in request.scope.nodes().order_by('path')]})
+    data = body_json(request)
+    kind = data.get('kind')
+    if kind == 'organization':
+        raise ApiProblem('No puedes crear otra organización raíz.', fields={'kind': 'Tipo de nodo no válido.'})
+    parent_id = data.get('parent')
+    parent = OrgNode.objects.filter(pk=parent_id).first() if parent_id else None
+    if not parent or not request.scope.covers(parent):
+        # Mismo mensaje si el padre no existe o si existe fuera del ámbito: no se confirma
+        # la existencia del recurso.
+        raise ApiProblem('No encontramos el nodo padre.', 'not_found', 404)
+    validar_nodo(kind, parent)
+    name = text(data, 'name', 120)
+    try:
+        with transaction.atomic():
+            node = OrgNode.objects.create(kind=kind, name=name, parent=parent)
+    except IntegrityError:
+        raise ApiProblem('Ya existe un nodo con ese nombre en este mismo nivel.', 'duplicate_name', 409, {'name': 'Ese nombre ya está en uso entre los hermanos.'})
+    return JsonResponse(node_data(node), status=201)
+
+
+@endpoint(['PUT', 'DELETE'], staff=True, permission='node.manage')
+def admin_node(request, node_id):
+    if request.method == 'DELETE':
+        with transaction.atomic():
+            node = get_node(node_id, request.scope)
+            if node.kind == 'organization':
+                raise ApiProblem('No puedes borrar la organización raíz.')
+            counts = {
+                'children': node.children.count(),
+                'memberships': node.memberships.count(),
+                'events': node.events.count(),
+                'guest_events': node.guest_events.count(),
+            }
+            if any(counts.values()):
+                raise ApiProblem('Este nodo tiene datos asociados. Archívalo en vez de borrarlo.', 'protected', 409, counts)
+            node.delete()
+        return HttpResponse(status=204)
+    data = body_json(request)
+    with transaction.atomic():
+        node = get_node(node_id, request.scope)
+        if 'name' in data:
+            node.name = text(data, 'name', 120)
+        if 'active' in data:
+            active = boolean(data, 'active')
+            if not active and node.kind == 'organization':
+                raise ApiProblem('No puedes archivar la organización raíz.')
+            node.active = active
+        try:
+            node.save()
+        except IntegrityError:
+            raise ApiProblem('Ya existe un nodo con ese nombre en este mismo nivel.', 'duplicate_name', 409, {'name': 'Ese nombre ya está en uso entre los hermanos.'})
+    return JsonResponse(node_data(node))
 
 
 def registration_values(data):

@@ -77,6 +77,9 @@ export interface RegistrationInput {
   request_id: string;
   answers: Record<string, string>;
 }
+export type OrgKind = 'organization' | 'congregation' | 'network' | 'subnetwork' | 'group';
+export interface OrgNode { id: string; kind: OrgKind; name: string; parent: string | null; active: boolean }
+export interface OrgNodeInput { kind: OrgKind; name: string; parent: string }
 export interface ApiError { error: { code: string; message: string; fields?: Record<string, string> } }
 export interface ApiContract {
   'GET /api/session': { response: Session };
@@ -90,6 +93,10 @@ export interface ApiContract {
   'POST /api/admin/events': { request: EventInput; response: Event };
   'PUT /api/admin/events/:id': { request: EventInput; response: Event };
   'POST /api/admin/images': { request: FormData; response: { url: string } };
+  'GET /api/admin/nodes': { response: { nodes: OrgNode[] } };
+  'POST /api/admin/nodes': { request: OrgNodeInput; response: OrgNode };
+  'PUT /api/admin/nodes/:id': { request: Partial<Pick<OrgNode, 'name' | 'active'>>; response: OrgNode };
+  'DELETE /api/admin/nodes/:id': { response: void };
   'POST /api/events/:id/registrations': { request: FormData; response: { reference: string; duplicate: boolean } };
   'GET /api/admin/registrations': { response: { registrations: Registration[] } };
   // Respuestas binarias: el navegador las abre o descarga, no pasan por api<T>().
