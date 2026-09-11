@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 720" width="1000" height="720">
+  <defs>
+    <linearGradient id="bg-jovenes" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e2eff8" />
+      <stop offset="60%" stop-color="#d0e4f2" />
+      <stop offset="100%" stop-color="#b6d5ec" />
+    </linearGradient>
+    <radialGradient id="star-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#087f86" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#d0e4f2" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <rect width="1000" height="720" fill="url(#bg-jovenes)" />
+
+  <g stroke="#0c2340" stroke-opacity="0.12" stroke-width="1">
+    <line x1="50" y1="50" x2="950" y2="50" />
+    <line x1="50" y1="670" x2="950" y2="670" />
+    <line x1="50" y1="50" x2="50" y2="670" />
+    <line x1="950" y1="50" x2="950" y2="670" />
+  </g>
+
+  <circle cx="730" cy="350" r="240" fill="url(#star-glow)" />
+
+  <g transform="translate(730, 350)">
+    <circle cx="0" cy="0" r="160" fill="none" stroke="#0c2340" stroke-opacity="0.2" stroke-width="1.5" stroke-dasharray="6 6" />
+    <circle cx="0" cy="0" r="210" fill="none" stroke="#087f86" stroke-opacity="0.3" stroke-width="1" />
+
+    <polygon points="0,-190 28,-40 190,0 28,40 0,190 -28,40 -190,0 -28,-40" fill="#0c2340" />
+    <polygon points="0,-140 18,-30 140,0 18,30 0,140 -18,30 -140,0 -18,-30" fill="#087f86" />
+
+    <polygon points="0,-190 0,190 0,0" stroke="#f4f9fd" stroke-width="2.5" />
+    <polygon points="-190,0 190,0 0,0" stroke="#f4f9fd" stroke-width="2.5" />
+
+    <rect x="-12" y="-120" width="24" height="240" fill="#0c2340" />
+    <rect x="-70" y="-70" width="140" height="24" fill="#0c2340" />
+
+    <rect x="-8" y="-116" width="16" height="232" fill="#f4f9fd" opacity="0.9" />
+    <rect x="-66" y="-66" width="132" height="16" fill="#f4f9fd" opacity="0.9" />
+
+    <circle cx="0" cy="-58" r="7" fill="#087f86" />
+    <circle cx="0" cy="0" r="10" fill="#0c2340" />
+    <circle cx="0" cy="0" r="5" fill="#f4f9fd" />
+
+    <circle cx="0" cy="-205" r="4" fill="#087f86" />
+    <circle cx="205" cy="0" r="4" fill="#087f86" />
+    <circle cx="0" cy="205" r="4" fill="#087f86" />
+    <circle cx="-205" cy="0" r="4" fill="#087f86" />
+  </g>
+
+  <g transform="translate(80, 100)">
+    <rect x="0" y="0" width="140" height="26" fill="#0c2340" rx="3" />
+    <text x="70" y="18" text-anchor="middle" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="800" letter-spacing="4" fill="#e2eff8">LIFE YOUTH</text>
+    <text x="160" y="18" font-family="'Helvetica Neue', Arial, sans-serif" font-size="11" font-weight="600" letter-spacing="3" fill="#087f86">MOVIMIENTO JUVENIL</text>
+  </g>
+
+  <text x="76" y="240" font-family="Georgia, 'Times New Roman', serif" font-size="108" font-style="italic" font-weight="400" fill="#0c2340" letter-spacing="-1">Una nueva</text>
+  <text x="80" y="340" font-family="'Helvetica Neue', Arial, sans-serif" font-size="94" font-weight="900" fill="#0c2340" letter-spacing="-2">GENERACIÓN.</text>
+
+  <text x="80" y="420" font-family="'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="3" fill="#087f86">PASIÓN • IDENTIDAD • PROPÓSITO</text>
+
+  <line x1="80" y1="460" x2="480" y2="460" stroke="#0c2340" stroke-opacity="0.2" stroke-width="1.5" />
+
+  <text x="80" y="520" font-family="'Helvetica Neue', Arial, sans-serif" font-size="15" font-weight="500" fill="#1b3b5f" letter-spacing="1">Viernes de Jóvenes • 19:30 hrs</text>
+  <text x="80" y="550" font-family="'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="400" fill="#3b5979" letter-spacing="1">Música en vivo, palabra relevante y comunidad real.</text>
+
+  <g transform="translate(80, 595)">
+    <circle cx="8" cy="8" r="4" fill="#087f86" />
+    <text x="24" y="12" font-family="'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="2" fill="#0c2340">#SOMOSLIFEYOUTH</text>
+  </g>
+
+  <text x="80" y="650" font-family="Georgia, 'Times New Roman', serif" font-size="13" font-style="italic" fill="#0c2340" fill-opacity="0.8">«Ninguno tenga en poco tu juventud, sino sé ejemplo de los creyentes»</text>
+</svg>

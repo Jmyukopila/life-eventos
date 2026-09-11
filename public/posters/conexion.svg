@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 720" width="1000" height="720">
+  <defs>
+    <linearGradient id="bg-conexion" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fcf9f2" />
+      <stop offset="50%" stop-color="#f5ede0" />
+      <stop offset="100%" stop-color="#ece2d0" />
+    </linearGradient>
+    <linearGradient id="arch-grad1" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#087f86" />
+      <stop offset="100%" stop-color="#102c40" />
+    </linearGradient>
+    <linearGradient id="arch-grad2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2d6a4f" />
+      <stop offset="100%" stop-color="#087f86" />
+    </linearGradient>
+    <linearGradient id="arch-grad3" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#52b788" />
+      <stop offset="100%" stop-color="#2d6a4f" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1000" height="720" fill="url(#bg-conexion)" />
+
+  <rect x="36" y="36" width="928" height="648" fill="none" stroke="#102c40" stroke-opacity="0.12" stroke-width="1.5" />
+
+  <g transform="translate(680, 160)">
+    <path d="M -120 440 L -120 180 A 120 120 0 0 1 120 180 L 120 440" fill="none" stroke="#2d6a4f" stroke-width="14" stroke-linecap="round" opacity="0.85" />
+    <path d="M -70 440 L -70 140 A 140 140 0 0 1 210 140 L 210 440" fill="none" stroke="#087f86" stroke-width="12" stroke-linecap="round" opacity="0.75" />
+    <path d="M 30 440 L 30 190 A 90 90 0 0 1 210 190 L 210 440" fill="none" stroke="#102c40" stroke-width="8" stroke-linecap="round" opacity="0.9" />
+
+    <path d="M -180 440 L -180 250 A 70 70 0 0 1 -40 250 L -40 440" fill="none" stroke="#52b788" stroke-width="6" stroke-linecap="round" stroke-dasharray="8 8" opacity="0.7" />
+
+    <circle cx="0" cy="180" r="8" fill="#102c40" />
+    <circle cx="70" cy="140" r="10" fill="#087f86" />
+    <circle cx="120" cy="190" r="6" fill="#2d6a4f" />
+
+    <line x1="-200" y1="440" x2="260" y2="440" stroke="#102c40" stroke-opacity="0.3" stroke-width="2" />
+  </g>
+
+  <text x="80" y="110" font-family="'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="800" letter-spacing="5" fill="#087f86">GRUPOS DE CONEXIÓN • LIFE</text>
+  <line x1="80" y1="130" x2="350" y2="130" stroke="#102c40" stroke-opacity="0.2" stroke-width="1" />
+
+  <text x="76" y="245" font-family="Georgia, 'Times New Roman', serif" font-size="104" font-style="italic" font-weight="400" fill="#102c40" letter-spacing="-1">La vida</text>
+  <text x="80" y="340" font-family="'Helvetica Neue', Arial, sans-serif" font-size="92" font-weight="900" fill="#087f86" letter-spacing="-2">ES MEJOR</text>
+  <text x="76" y="440" font-family="Georgia, 'Times New Roman', serif" font-size="98" font-style="italic" font-weight="400" fill="#2d6a4f" letter-spacing="-1">en comunidad.</text>
+
+  <text x="80" y="525" font-family="'Helvetica Neue', Arial, sans-serif" font-size="15" font-weight="600" fill="#102c40" fill-opacity="0.85" letter-spacing="1">Espacios para crecer, compartir y caminar juntos.</text>
+
+  <g transform="translate(80, 565)">
+    <rect x="0" y="0" width="180" height="42" rx="4" fill="#102c40" />
+    <text x="90" y="26" text-anchor="middle" font-family="'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="2" fill="#fcf9f2">ÚNETE A UN GRUPO</text>
+
+    <text x="210" y="26" font-family="'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="500" letter-spacing="1" fill="#102c40">SEDES Y HOGARES • ENCUENTRA EL TUYO</text>
+  </g>
+
+  <text x="80" y="655" font-family="Georgia, 'Times New Roman', serif" font-size="13" font-style="italic" fill="#087f86">«Mejores son dos que uno, porque tienen mejor paga por su trabajo»</text>
+</svg>

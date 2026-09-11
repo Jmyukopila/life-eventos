@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 720" width="1000" height="720">
+  <defs>
+    <linearGradient id="bg-familias" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f8f3eb" />
+      <stop offset="60%" stop-color="#efe4d3" />
+      <stop offset="100%" stop-color="#e2d3bd" />
+    </linearGradient>
+    <linearGradient id="orange-circle1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f4a261" />
+      <stop offset="100%" stop-color="#e76f51" />
+    </linearGradient>
+    <linearGradient id="orange-circle2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e76f51" />
+      <stop offset="100%" stop-color="#d94e34" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1000" height="720" fill="url(#bg-familias)" />
+
+  <g transform="translate(680, 360)">
+    <circle cx="0" cy="0" r="230" fill="none" stroke="#e76f51" stroke-opacity="0.18" stroke-width="1.5" stroke-dasharray="8 8" />
+    <circle cx="0" cy="0" r="180" fill="none" stroke="#102c40" stroke-opacity="0.1" stroke-width="1" />
+
+    <g opacity="0.92">
+      <circle cx="-60" cy="-20" r="95" fill="url(#orange-circle1)" />
+      <circle cx="-60" cy="-145" r="38" fill="#e76f51" />
+
+      <circle cx="65" cy="15" r="80" fill="url(#orange-circle2)" />
+      <circle cx="65" cy="-90" r="32" fill="#d94e34" />
+
+      <circle cx="0" cy="90" r="65" fill="#e9c46a" />
+      <circle cx="0" cy="5" r="25" fill="#f4a261" />
+
+      <circle cx="120" cy="120" r="45" fill="#f8b878" opacity="0.85" />
+      <circle cx="120" cy="60" r="18" fill="#f4a261" />
+    </g>
+
+    <path d="M -120 180 Q 0 210 160 180" fill="none" stroke="#102c40" stroke-opacity="0.25" stroke-width="2" stroke-linecap="round" />
+  </g>
+
+  <text x="80" y="110" font-family="'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="800" letter-spacing="5" fill="#e76f51">FAMILIAS CON PROPÓSITO</text>
+  <line x1="80" y1="130" x2="380" y2="130" stroke="#e76f51" stroke-opacity="0.3" stroke-width="1" />
+
+  <text x="76" y="245" font-family="Georgia, 'Times New Roman', serif" font-size="108" font-style="italic" font-weight="400" fill="#102c40" letter-spacing="-1">Tiempo</text>
+  <text x="80" y="345" font-family="'Helvetica Neue', Arial, sans-serif" font-size="94" font-weight="900" fill="#d94e34" letter-spacing="-2">EN FAMILIA.</text>
+
+  <text x="80" y="420" font-family="'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="600" fill="#4a3e35" letter-spacing="1">Edificando hogares sobre fundamentos firmes.</text>
+
+  <line x1="80" y1="460" x2="480" y2="460" stroke="#102c40" stroke-opacity="0.15" stroke-width="1" />
+
+  <g transform="translate(80, 500)">
+    <text x="0" y="20" font-family="'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="800" letter-spacing="2" fill="#102c40">TALLERES • MATRIMONIOS • HIJOS</text>
+    <text x="0" y="50" font-family="'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="400" letter-spacing="1" fill="#6c5a4e">Un espacio dedicado a fortalecer lazos y compartir experiencias.</text>
+  </g>
+
+  <g transform="translate(80, 595)">
+    <rect x="0" y="0" width="160" height="38" rx="4" fill="#e76f51" />
+    <text x="80" y="24" text-anchor="middle" font-family="'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="2" fill="#ffffff">PARTICIPAR</text>
+    <text x="180" y="24" font-family="'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="600" letter-spacing="1" fill="#102c40">SÁBADOS 10:00 AM</text>
+  </g>
+
+  <text x="80" y="660" font-family="Georgia, 'Times New Roman', serif" font-size="13" font-style="italic" fill="#8c4331">«Yo y mi casa serviremos al Señor»</text>
+</svg>

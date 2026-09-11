@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.venv/
+__pycache__/
+*.py[cod]
+*.sqlite3
+*.sqlite3-*
+.env
+.env.*
+server/media/
+server/private/
+server/staticfiles/
+*.tsbuildinfo
+test-results/
+playwright-report/
+
+life_iglesia_eventos.egg-info/

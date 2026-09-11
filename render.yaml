@@ -1,0 +1,35 @@
+# Un solo servicio: Django sirve el frontend construido y la API desde el mismo origen.
+# Sin proxy, sin CORS, sin segunda plataforma.
+services:
+  - type: web
+    name: life-eventos
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    region: ohio          # misma región que el pooler de Supabase (us-east-2)
+    plan: free            # duerme a los 15 min sin tráfico; despertar tarda ~1 min
+    healthCheckPath: /healthz
+    envVars:
+      - key: DJANGO_DEBUG
+        value: "0"
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_ALLOWED_HOSTS
+        fromService: { type: web, name: life-eventos, property: host }
+      - key: DJANGO_CSRF_ORIGINS
+        fromService: { type: web, name: life-eventos, property: hostport }
+      # Secretos: se pegan en el panel de Render, nunca en este archivo.
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_URL_MIGRATIONS
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: DJANGO_ADMIN_USER
+        sync: false
+      - key: DJANGO_ADMIN_PASSWORD
+        sync: false
+      # Token del cron externo. Sin él, /tareas/purga no existe.
+      - key: TAREAS_TOKEN
+        generateValue: true

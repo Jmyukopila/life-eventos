@@ -1,0 +1,42 @@
+# Plantilla de variables de entorno.  Cópiala y rellénala:  cp entorno.example .env
+# .env no se versiona (ya está en .gitignore).
+#
+# Genera la clave de Django con:
+#   .venv/bin/python -c "import secrets; print(secrets.token_urlsafe(64))"
+# (No uses get_random_secret_key(): mete $ ^ ( ) & * y rompe cualquier `source .env`.
+#  Entrecomillar tampoco vale, porque docker --env-file se traga las comillas como parte del valor.)
+
+DJANGO_SECRET_KEY=
+DJANGO_DEBUG=0
+DJANGO_ALLOWED_HOSTS=tu-dominio.com
+DJANGO_CSRF_ORIGINS=https://tu-dominio.com
+
+# PostgreSQL de Supabase.
+# La contraseña va PERCENT-CODIFICADA dentro de la URI: @ es %40, & es %26, : es %3A, / es %2F, # es %23.
+# Puerto 6543 = pooler en modo transacción, el que usa la aplicación en marcha.
+# Puerto 5432 = sesión completa, el que hay que usar para ejecutar migraciones.
+# Para construir DATABASE_URL sin pelearte con la codificación, ejecuta esto y pega el resultado:
+#   .venv/bin/python -c "import urllib.parse,getpass; p=getpass.getpass('contraseña: '); \
+#     print('postgresql://postgres.REFERENCIA:'+urllib.parse.quote(p,safe='')+'@aws-0-us-east-2.pooler.supabase.com:6543/postgres')"
+DATABASE_URL=postgresql://postgres.REFERENCIA:CONTRASENA_CODIFICADA@aws-0-us-east-2.pooler.supabase.com:6543/postgres
+
+# Supabase Storage. Sin estas dos, los archivos van al disco local del contenedor y se pierden
+# en cada redespliegue: las portadas de los eventos y los adjuntos de las inscripciones.
+# La service_role key está en el panel de Supabase: Settings -> API -> service_role.
+# Es secreta y se salta las políticas RLS. Nunca la pongas en el frontend.
+SUPABASE_URL=https://REFERENCIA.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=
+SUPABASE_BUCKET_PUBLIC=event-images
+SUPABASE_BUCKET_PRIVATE=registration-files
+
+# Usuario del panel que crea el arranque del contenedor si todavía no existe.
+# Mínimo 15 caracteres: lo exigen los validadores de contraseña del proyecto.
+DJANGO_ADMIN_USER=admin
+DJANGO_ADMIN_PASSWORD=
+
+# Disparador externo de la purga por retención (los cron de Render no existen en el plan
+# gratuito). Un cron gratuito llama a diario:
+#   curl -fsS -X POST -H "Authorization: Bearer $TAREAS_TOKEN" https://TU-APP/tareas/purga
+# Mínimo 32 caracteres o el endpoint responde 503. Genéralo con:
+#   .venv/bin/python -c "import secrets; print(secrets.token_urlsafe(32))"
+TAREAS_TOKEN=
